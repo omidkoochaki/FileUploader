@@ -1,0 +1,58 @@
+version: "3.9"
+
+services:
+  dbs:
+    container_name: uploaderdb
+    image: postgres
+    volumes:
+      - ./myallnewdata/myallnewdb:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - DB_HOST=dbs
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
+    networks:
+      - omid
+
+
+  web:
+    container_name: uploaderweb
+    build:
+      context: .
+      dockerfile: Docker/web/Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "80:8000"
+
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - DB_HOST=dbs
+    depends_on:
+      - dbs
+    networks:
+      - omid
+
+  minio:
+    container_name: minio
+    build:
+      context: .
+      dockerfile: Docker/minIO/Dockerfile
+    environment:
+      MINIO_ACCESS_KEY: "H8TSA9VXWKA8UXP1CL4N"
+      MINIO_SECRET_KEY: "VdVmPkzmY7sXslLg+yxByNK7S9Q9Q7jSY1ytSqO7"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - omid
+networks:
+  omid:
+    driver: bridge
